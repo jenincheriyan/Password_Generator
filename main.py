@@ -1,12 +1,15 @@
 import tkinter as tk
+from json import JSONDecodeError
 from tkinter import Entry, Button,messagebox
 import secrets,string
 LENGTH =12
+import json
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 def generate_password():
     character = string.ascii_letters+string.digits + string.punctuation
     password= ''.join(secrets.choice(character) for _ in range(LENGTH))
+    password_entry.delete(0, tk.END)
     password_entry.insert(0, password)
 
 
@@ -15,14 +18,28 @@ def save_password():
         website=website_entry.get()
         email=email_entry.get()
         password= password_entry.get()
+        new_data= {website:{"email": email,
+                        "password":password
+                        }}
         is_ok= messagebox.askokcancel(title=website, message="just look bro,"
                                                       "is every thing correct"
                                                       " or not")
         if is_ok:
-            with open("password.txt", "a") as data_save:
-                data_save.write(f"{website} | {email} | {password}\n")
-                password_entry.delete(0, tk.END)
-                website_entry.delete(0, tk.END)
+            try:
+                with open("password.json", "r") as data_file:
+                    data= json.load(data_file)
+            except FileNotFoundError:
+                with open("password.json","w") as data_file:
+                    json.dump(new_data,data_file,indent=4)
+            except JSONDecodeError:
+                with open("password.json", "w") as data_file:
+                    json.dump(new_data, data_file, indent=4)
+            else:
+                data.update(new_data)
+                with open("password.json",'w') as data_file:
+                    json.dump(data,data_file,indent=4)
+            password_entry.delete(0, tk.END)
+            website_entry.delete(0, tk.END)
 # ---------------------------- UI SETUP ------------------------------- #
 
 window= tk.Tk()
